@@ -27,10 +27,20 @@ node --check dist/app.js
 ## Hospedar na Vercel e coletar com GitHub Actions
 
 1. No Supabase, use um usuário de e-mail e senha para acessar o painel. Se a base ainda não tiver as tabelas do Radar, execute `supabase.sql` no SQL Editor.
-2. Importe o repositório na Vercel como projeto Flask. Em **Environment Variables**, configure `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `SUPABASE_PUBLISHABLE_KEY`, `RADAR_OWNER_EMAIL` e `RADAR_SESSION_SECRET` (segredo aleatório de pelo menos 32 caracteres). O plano Hobby é para uso pessoal e não comercial.
+2. Configure a política de leitura descrita abaixo. Importe o repositório na Vercel como projeto Flask e configure `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `RADAR_OWNER_EMAIL` e `RADAR_SESSION_SECRET` (segredo aleatório de pelo menos 32 caracteres). O plano Hobby é para uso pessoal e não comercial.
 3. Em **Settings → Secrets and variables → Actions** do GitHub, configure os secrets `SUPABASE_URL` e `SUPABASE_SECRET_KEY`. Use os campos de segredos de cada serviço e mantenha as chaves fora dos arquivos versionados.
 4. Abra **Actions → Coleta do Radar → Run workflow** e confira o resultado. As próximas coletas são programadas para 08h17 e 18h17, no horário de João Pessoa. O GitHub pode desativar agendamentos após 60 dias sem atividade em repositório público.
 5. Depois de verificar o painel, adicione `radar.escalarapida.com.br` na Vercel e aponte o CNAME `radar` para o destino indicado no projeto.
+
+O painel lê o catálogo com o token do usuário autenticado. Para instalar em outra base, execute no SQL Editor, substituindo o e-mail de exemplo pelo mesmo e-mail configurado em `RADAR_OWNER_EMAIL`.
+
+```sql
+grant select on public.radar_snapshot to authenticated;
+create policy radar_owner_catalog_read on public.radar_snapshot
+for select to authenticated
+using (id = 'main' and (select auth.uid()) is not null
+       and lower((select auth.jwt()) ->> 'email') = 'owner@example.com');
+```
 
 ## Hospedar no Render com Supabase
 

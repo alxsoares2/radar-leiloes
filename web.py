@@ -1,16 +1,15 @@
 import hmac
 import os
+import json
 import time
 
 import requests
 from flask import Flask, abort, jsonify, redirect, render_template_string, request, send_from_directory, session
 
-from cloud import cloud_database
-from radar import ROOT, read_data
+from cloud import Supabase
+from radar import ROOT
 
-database = cloud_database()
-if not database:
-    raise RuntimeError("Configure o Supabase antes de iniciar o painel online.")
+supabase_url = os.environ["SUPABASE_URL"].rstrip("/")
 
 app = Flask(__name__, static_folder=None)
 app.config.update(
@@ -50,16 +49,18 @@ def login():
     if email == allowed_email and password and len(password) <= 512:
         try:
             response = requests.post(
-                f"{database.url}/auth/v1/token", params={"grant_type": "password"},
+                f"{supabase_url}/auth/v1/token", params={"grant_type": "password"},
                 headers={"apikey": auth_key}, json={"email": email, "password": password}, timeout=12,
             )
             if response.ok:
                 user = response.json().get("user", {})
                 account = user.get("email", "").lower()
-                if user.get("id") and hmac.compare_digest(account.encode(), allowed_email.encode()):
+                token = response.json().get("access_token")
+                if token and user.get("id") and hmac.compare_digest(account.encode(), allowed_email.encode()):
                     session.clear()
                     session["owner"] = account
-                    session["expires"] = int(time.time()) + 3600
+                    session["token"] = token
+                    session["expires"] = int(time.time()) + min(3600, int(response.json().get("expires_in", 3600)))
                     return redirect("/")
         except (requests.RequestException, ValueError):
             return render_template_string(LOGIN, error="Autenticação indisponível. Tente novamente."), 503
@@ -74,13 +75,18 @@ def health():
 @app.get("/")
 @app.get("/<path:filename>")
 def panel(filename="index.html"):
-    if session.get("owner") != allowed_email or session.get("expires", 0) <= time.time():
+    if session.get("owner") != allowed_email or not session.get("token") or session.get("expires", 0) <= time.time():
         if filename == "api/lots":
             abort(401)
         return redirect("/login")
     if filename == "api/lots":
         try:
-            return jsonify({**read_data(), "manualRefresh": False})
+            database = Supabase(supabase_url, auth_key)
+            database.headers["Authorization"] = "Bearer " + session["token"]
+            data = database.read()
+            if data is None:
+                data = json.loads((ROOT / "seed.json").read_text(encoding="utf-8"))
+            return jsonify({**data, "manualRefresh": False})
         except (requests.RequestException, RuntimeError):
             return jsonify(error="Base temporariamente indisponível."), 503
     if filename not in {"index.html", "app.js", "style.css", "data.js"}:
