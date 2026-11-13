@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Radar de Leilões</title><link rel="stylesheet" href="style.css"><script defer src="data.js"></script><script defer src="app.js"></script></head>
+<body><header><div class="shell mast"><a href="./" class="brand"><span class="mark" aria-hidden="true">◉</span> Radar de Leilões</a><div class="head-actions"><button id="sources" class="quiet">Fontes</button><button id="reload" class="quiet" hidden>Atualizar coleta</button></div></div></header>
+<main class="shell"><section class="intro"><div><h1>Leilões de veículos</h1><p id="dataset"></p></div><span class="scope">Brasil</span></section>
+<div class="layout"><aside aria-label="Filtros"><div class="aside-head"><h2>Filtros</h2><button id="clear" class="link">Limpar</button></div>
+<form id="filters"><label for="category">Tipo de veículo</label><select id="category"><option value="">Todos os tipos</option><option>Carro</option><option>SUV</option><option>Van</option><option>Caminhonete</option><option>Moto</option><option>Caminhão</option><option>Ônibus</option><option>Outro</option></select>
+<label for="mode">Tipo de leilão</label><select id="mode"><option value="">Todos</option><option>Judicial</option><option>Extrajudicial</option><option>Administrativo</option><option>A confirmar</option></select>
+<fieldset><legend>Ano-modelo</legend><div class="pair"><input id="minYear" aria-label="Ano inicial" type="number" min="1900" max="2100" placeholder="De"><input id="maxYear" aria-label="Ano final" type="number" min="1900" max="2100" placeholder="Até"></div></fieldset>
+<label for="uf">Estado de retirada</label><select id="uf"><option value="">Todos os estados</option></select>
+<fieldset><legend>Lance (R$)</legend><div class="pair"><input id="minPrice" aria-label="Lance mínimo" type="number" min="0" placeholder="De"><input id="maxPrice" aria-label="Lance máximo" type="number" min="0" placeholder="Até"></div></fieldset>
+<label for="installment">Parcelamento</label><select id="installment"><option value="">Qualquer condição</option><option>Aceita proposta</option><option>Somente à vista</option><option>A confirmar</option></select>
+<label for="payment">Pagamento do arremate</label><select id="payment"><option value="">Qualquer modalidade</option><option>Boleto</option><option>Guia judicial</option><option>Pix</option><option>Transferência</option><option>A confirmar</option></select>
+<label for="condition">Condição</label><select id="condition"><option value="">Todas</option></select>
+<label for="status">Situação</label><select id="status"><option value="">Todas</option><option>A encerrar</option><option>Encerrado</option><option>Cancelado</option><option>Sem data</option></select>
+<label class="check"><input id="boleto" type="checkbox"> Boleto confirmado no saldo</label>
+<label class="check"><input id="official" type="checkbox"> Com link de edital</label>
+</form></aside><section class="results" aria-label="Resultados"><div class="search-row"><label class="search"><span aria-hidden="true">⌕</span><input id="query" type="search" aria-label="Buscar marca, modelo, cidade ou processo" placeholder="Marca, modelo, cidade ou processo"></label><button id="export" class="primary">Exportar CSV</button></div>
+<div class="toolbar"><p id="count" aria-live="polite"></p><label>Ordenar <select id="sort"><option value="recent">Encerramento próximo</option><option value="price">Menor lance</option><option value="year">Ano mais novo</option></select></label></div><p id="error" role="status" hidden></p><div id="cards"></div></section></div></main>
+<dialog id="dialog"><div class="dialog-head"><h2 id="dialogTitle"></h2><button id="close" class="quiet">Fechar</button></div><div id="dialogBody"></div></dialog>
+</body></html>
+
