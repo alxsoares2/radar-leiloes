@@ -10,6 +10,7 @@ from cloud import Supabase
 from radar import ROOT
 
 supabase_url = os.environ["SUPABASE_URL"].rstrip("/")
+public_preview = os.environ.get("RADAR_PUBLIC_PREVIEW") == "1"
 
 app = Flask(__name__, static_folder=None)
 app.config.update(
@@ -42,6 +43,8 @@ def private_response(response):
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    if public_preview:
+        return redirect("/")
     if request.method == "GET":
         return render_template_string(LOGIN, error=None)
     email = request.form.get("email", "").strip().lower()
@@ -75,15 +78,18 @@ def health():
 @app.get("/")
 @app.get("/<path:filename>")
 def panel(filename="index.html"):
-    if session.get("owner") != allowed_email or not session.get("token") or session.get("expires", 0) <= time.time():
+    signed_in = session.get("owner") == allowed_email and session.get("token") and session.get("expires", 0) > time.time()
+    if not public_preview and not signed_in:
         if filename == "api/lots":
             abort(401)
         return redirect("/login")
     if filename == "api/lots":
         try:
-            database = Supabase(supabase_url, auth_key)
-            database.headers["Authorization"] = "Bearer " + session["token"]
-            data = database.read()
+            data = None
+            if not public_preview:
+                database = Supabase(supabase_url, auth_key)
+                database.headers["Authorization"] = "Bearer " + session["token"]
+                data = database.read()
             if data is None:
                 data = json.loads((ROOT / "seed.json").read_text(encoding="utf-8"))
             return jsonify({**data, "manualRefresh": False})
