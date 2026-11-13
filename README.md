@@ -24,11 +24,19 @@ python -m unittest discover -s tests -v
 node --check dist/app.js
 ```
 
+## Hospedar na Vercel e coletar com GitHub Actions
+
+1. No Supabase, use um usuário de e-mail e senha para acessar o painel. Se a base ainda não tiver as tabelas do Radar, execute `supabase.sql` no SQL Editor.
+2. Importe o repositório na Vercel como projeto Flask. Em **Environment Variables**, configure `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `SUPABASE_PUBLISHABLE_KEY`, `RADAR_OWNER_EMAIL` e `RADAR_SESSION_SECRET` (segredo aleatório de pelo menos 32 caracteres). O plano Hobby é para uso pessoal e não comercial.
+3. Em **Settings → Secrets and variables → Actions** do GitHub, configure os secrets `SUPABASE_URL` e `SUPABASE_SECRET_KEY`. Use os campos de segredos de cada serviço e mantenha as chaves fora dos arquivos versionados.
+4. Abra **Actions → Coleta do Radar → Run workflow** e confira o resultado. As próximas coletas são programadas para 08h17 e 18h17, no horário de João Pessoa. O GitHub pode desativar agendamentos após 60 dias sem atividade em repositório público.
+5. Depois de verificar o painel, adicione `radar.escalarapida.com.br` na Vercel e aponte o CNAME `radar` para o destino indicado no projeto.
+
 ## Hospedar no Render com Supabase
 
 1. Abra o SQL Editor do projeto Supabase escolhido e execute `supabase.sql`. O script cria tabelas específicas do radar para o catálogo e as mudanças de preço.
 2. Em Authentication, use ou crie um usuário de e-mail e senha para o painel. No Render, informe esse e-mail em `RADAR_OWNER_EMAIL`.
-3. No Render, selecione este repositório como fonte e configure o Blueprint `render.yaml` no Render. Informe a URL HTTPS do projeto e as chaves de servidor e publicável nos campos de ambiente indicados. A chave de servidor fica apenas no Render.
+3. No Render, selecione este repositório como fonte e configure o Blueprint `render.yaml`. Informe a URL HTTPS do projeto e as chaves de servidor e publicável nos campos de ambiente indicados.
 4. Execute manualmente o cron `radar-coleta` e confirme as fontes, lotes e fotos no painel autenticado. O cron fica configurado para 08h e 18h de João Pessoa (11h e 21h UTC).
 5. Adicione `radar.escalarapida.com.br` como domínio do serviço web no Render e crie o CNAME `radar` na zona DNS que administra o domínio, usando o destino exibido pelo Render.
 
